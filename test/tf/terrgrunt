@@ -1,0 +1,14 @@
+include {
+  path = find_in_parent_folders()
+}
+
+terraform {
+  source = "../../../modules/kinesis"
+}
+
+inputs = {
+  log = {
+    "name1" = ["/aws-glue/1232"],
+    "name2" = ["/aws/lambda/1232"]
+  }
+}
