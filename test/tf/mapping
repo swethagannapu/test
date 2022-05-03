@@ -1,0 +1,24 @@
+locals {
+  members = concat(
+    iam_group1,
+    iam_group2,
+  )
+  roles = [
+    "roles/iam.serviceAccountTokenCreator",
+    "roles/iam.serviceAccountUser",
+  ]
+  permissions = {
+    for i in setproduct(toset(local.members), toset(local.roles)) :
+    "${i[0]}--${i[1]}" => {
+      member = i[0]
+      role   = i[1]
+    }
+  }
+}
+resource "google_service_account_iam_member" "sa_splunkcloud_svcacct" {
+  for_each = local.permissions
+
+  service_account_id = google_service_account.sa.name
+  role               = each.value.role
+  member             = each.value.member
+}
