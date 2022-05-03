@@ -1,0 +1,14 @@
+data "kubectl_path_documents" "manifests" {
+  pattern = "${path.module}/templates/manifest.yaml"
+  vars = {
+    # Avoid apply attributes or get "value depends on resource attributes that cannot be determined until apply" errors
+    namespace = var.namespace
+    env = var.env
+    sov = var.sov
+  }
+}
+
+resource "kubectl_manifest" "cloudability" {
+  for_each  = toset(data.kubectl_path_documents.manifests.documents)
+  yaml_body = each.value
+}
