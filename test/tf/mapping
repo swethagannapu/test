@@ -22,3 +22,38 @@ resource "google_service_account_iam_member" "sa_splunkcloud_svcacct" {
   role               = each.value.role
   member             = each.value.member
 }
+locals {
+  bootstrap_outputs = data.terraform_remote_state.bootstrap.outputs
+  tf_sa_outputs     = data.terraform_remote_state.terraform_sa.outputs
+
+  #quotas are in MiB
+  workspaces = {
+    group1 = {
+      access = ["group:xyz@example.com",]
+      role = ["roles/bigquery.admin", "roles/viewer",]
+      user_quota = 50*1024
+      project_quota = 100*1024
+    }
+    group2 = {
+      access = ["group:xyz@example.com",]
+      role = ["roles/bigquery.admin", "roles/viewer",]
+      user_quota = 1024*1024*3
+      project_quota = 1024*1024*10
+    }
+  
+  }
+
+  workspace_access = {
+    for f in flatten([
+      for ws, data in local.workspaces: [
+        for p in data.access: [
+          for r in data.role: {
+          ws = ws
+          p = p
+          r = r
+        }
+        ]
+      ]
+    ]): "${f.ws}-${f.p}-${f.r}" => f
+  }
+}
